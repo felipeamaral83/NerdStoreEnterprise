@@ -66,11 +66,11 @@ namespace NSE.Identidade.API.Controllers
 
             if (result.IsLockedOut)
             {
-                AdicionarErroProcessamento("Usuário temporariamente bloqueado por tentativas inválidas");
+                AdicionarErroProcessamento("Usuário temporariamente bloqueado por tentativas inválidas.");
                 return CustomResponse();
             }
 
-            AdicionarErroProcessamento("Usuário ou senha incorretos");
+            AdicionarErroProcessamento("Usuário ou senha incorretos.");
             return CustomResponse();
         }
 
