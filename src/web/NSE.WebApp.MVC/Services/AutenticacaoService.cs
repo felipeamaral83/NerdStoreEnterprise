@@ -22,7 +22,7 @@ namespace NSE.WebApp.MVC.Services
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PostAsync("", content);
+            var response = await _httpClient.PostAsync("https://localhost:44314/api/identidade/autenticar", content);
 
             var options = new JsonSerializerOptions
             {
@@ -39,7 +39,7 @@ namespace NSE.WebApp.MVC.Services
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PostAsync("", content);
+            var response = await _httpClient.PostAsync("https://localhost:44314/api/identidade/nova-conta", content);
 
             var options = new JsonSerializerOptions
             {
