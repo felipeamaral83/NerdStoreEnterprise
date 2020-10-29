@@ -15,7 +15,7 @@ namespace NSE.WebApp.MVC.Services
             _httpClient = httpClient;
         }
         
-        public async Task<string> Login(UsuarioLoginViewModel usuarioLoginViewModel)
+        public async Task<UsuarioRespostaLoginViewModel> Login(UsuarioLoginViewModel usuarioLoginViewModel)
         {
             var content = new StringContent(
                 JsonSerializer.Serialize(usuarioLoginViewModel),
@@ -24,10 +24,15 @@ namespace NSE.WebApp.MVC.Services
 
             var response = await _httpClient.PostAsync("", content);
 
-            return JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync());
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            return JsonSerializer.Deserialize<UsuarioRespostaLoginViewModel>(await response.Content.ReadAsStringAsync(), options);
         }
 
-        public async Task<string> Registro(UsuarioRegistroViewModel usuarioRegistroViewModel)
+        public async Task<UsuarioRespostaLoginViewModel> Registro(UsuarioRegistroViewModel usuarioRegistroViewModel)
         {
             var content = new StringContent(
                 JsonSerializer.Serialize(usuarioRegistroViewModel),
@@ -36,7 +41,12 @@ namespace NSE.WebApp.MVC.Services
 
             var response = await _httpClient.PostAsync("", content);
 
-            return JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync());
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            return JsonSerializer.Deserialize<UsuarioRespostaLoginViewModel>(await response.Content.ReadAsStringAsync(), options);
         }
     }
 }
