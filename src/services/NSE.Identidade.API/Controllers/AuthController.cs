@@ -1,10 +1,10 @@
-﻿using EasyNetQ;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NSE.Core.Messages.Integration;
 using NSE.Identidade.API.Models;
+using NSE.MessageBus;
 using NSE.WebAPI.Core.Controllers;
 using NSE.WebAPI.Core.Identidade;
 using System;
@@ -23,17 +23,18 @@ namespace NSE.Identidade.API.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AppSettings _appSettings;
-
-        private IBus _bus;
+        private readonly IMessageBus _messageBus;
 
         public AuthController(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
-            IOptions<AppSettings> appSettings)
+            IOptions<AppSettings> appSettings,
+            IMessageBus messageBus)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _appSettings = appSettings.Value;
+            _messageBus = messageBus;
         }
 
         [HttpPost("nova-conta")]
@@ -52,7 +53,14 @@ namespace NSE.Identidade.API.Controllers
 
             if (result.Succeeded)
             {
-                var sucesso = await RegistrarCliente(usuarioRegistroViewModel);
+                var clienteResult = await RegistrarCliente(usuarioRegistroViewModel);
+                
+                if (!clienteResult.ValidationResult.IsValid)
+                {
+                    await _userManager.DeleteAsync(user);
+                    return CustomResponse(clienteResult.ValidationResult);
+                }
+                
                 return CustomResponse(await GerarJwt(user.Email));
             }
 
@@ -92,11 +100,15 @@ namespace NSE.Identidade.API.Controllers
                 usuarioRegistroViewModel.Email,
                 usuarioRegistroViewModel.Cpf);
 
-            _bus = RabbitHutch.CreateBus("host=localhost:5672");
-
-            var sucesso = await _bus.Rpc.RequestAsync<UsuarioRegistradoIntegrationEvent, ResponseMessage>(usuarioRegistrado);
-
-            return sucesso;
+            try
+            {
+                return await _messageBus.RequestAsync<UsuarioRegistradoIntegrationEvent, ResponseMessage>(usuarioRegistrado);
+            }
+            catch
+            {
+                await _userManager.DeleteAsync(usuario);
+                throw;
+            }
         }
 
         private async Task<UsuarioRespostaLoginViewModel> GerarJwt(string email)
