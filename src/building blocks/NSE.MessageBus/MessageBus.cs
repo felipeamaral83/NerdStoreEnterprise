@@ -11,6 +11,7 @@ namespace NSE.MessageBus
     public class MessageBus : IMessageBus
     {
         private IBus bus;
+        private IAdvancedBus advancedBus;
         private readonly string _connectionString;
 
         public MessageBus(string connectionString)
@@ -20,6 +21,8 @@ namespace NSE.MessageBus
         }
 
         public bool IsConnected => bus?.Advanced.IsConnected ?? false;
+
+        public IAdvancedBus AdvancedBus => bus?.Advanced;
 
         public void Publish<T>(T message) where T : IntegrationEvent
         {
@@ -85,7 +88,20 @@ namespace NSE.MessageBus
                 .Or<BrokerUnreachableException>()
                 .WaitAndRetry(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
 
-            policy.Execute(() => { bus = RabbitHutch.CreateBus(_connectionString); });
+            policy.Execute(() => {
+                bus = RabbitHutch.CreateBus(_connectionString);
+                advancedBus = bus.Advanced;
+                advancedBus.Disconnected += OnDisconnect;
+            });
+        }
+
+        private void OnDisconnect(object s, EventArgs e)
+        {
+            var policy = Policy.Handle<EasyNetQException>()
+                .Or<BrokerUnreachableException>()
+                .RetryForever();
+
+            policy.Execute(TryConnect);
         }
 
         public void Dispose()
