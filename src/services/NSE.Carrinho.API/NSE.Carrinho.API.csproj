@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>8797538c-48ce-47ba-885c-9767adf36192</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,11 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\building blocks\NSE.WebAPI.Core\NSE.WebAPI.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\" />
-    <Folder Include="Model\" />
   </ItemGroup>
 
 
